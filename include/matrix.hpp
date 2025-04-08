@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <concepts>
 #include <iostream>
 #include <span>
@@ -27,24 +26,28 @@ template<NumberType T>
 class Matrix;
 template<NumberType T>
 std::ostream& operator<<(std::ostream &os, const Matrix<T> &matrix);
+template<NumberType T>
+Matrix<T> operator*(const Matrix<T> &mat1, const Matrix<T> &mat2);
 
 template<NumberType T>
 class Matrix
 {
-
-public:
     template<NumberType K>
     friend std::ostream& operator<<(std::ostream &os, const Matrix<K> &matrix);
+    template<NumberType K>
+    friend Matrix<K> operator*(const Matrix<K> &mat1, const Matrix<K> &mat2);
 
+public:
+    Matrix() noexcept = default;
     Matrix(const std::size_t M, const std::size_t N) noexcept;
     Matrix(const T value, const std::size_t M, const std::size_t N) noexcept;
     Matrix(std::span<T> array, const std::size_t M, const std::size_t N);
 	virtual ~Matrix() noexcept = default;
 
-    Matrix(const Matrix<T> &other) noexcept;
-    Matrix(Matrix<T> &&other) noexcept;
-    Matrix &operator=(const Matrix<T> &other) noexcept;
-    Matrix &operator=(Matrix<T> &&other) noexcept;
+    Matrix(const Matrix<T> &other) noexcept = default;
+    Matrix(Matrix<T> &&other) noexcept = default;
+    Matrix &operator=(const Matrix<T> &other) noexcept = default;
+    Matrix &operator=(Matrix<T> &&other) noexcept = default;
 
     [[nodiscard]] Matrix operator+(const Matrix<T> &other) noexcept;
     [[nodiscard]] Matrix operator-(const Matrix<T> &other) noexcept;
@@ -54,18 +57,21 @@ public:
 
 	[[nodiscard]] T at(const std::size_t m, const std::size_t n) const;
     [[nodiscard]] Row<T> column(const std::size_t n) const;
+    [[nodiscard]] inline const std::size_t &columnCount() const noexcept { return _N_; }
     [[nodiscard]] Data<T> &data();
     [[nodiscard]] const Data<T> &data() const;
 	void fill(const T value);
 	inline void ones() { fill(static_cast<T>(1)); }
     [[nodiscard]] Row<T> &row(const std::size_t m);
+    [[nodiscard]] inline const std::size_t &rowCount() const noexcept { return _M_; }
     [[nodiscard]] const Row<T> &row(const std::size_t m) const;
+    void setData(const Data<T> &data) noexcept;
     [[nodiscard]] Matrix<T> transposed() const noexcept;
 	inline void zeros() { fill(static_cast<T>(0)); }
 
 protected:
-    const std::size_t _M_;
-    const std::size_t _N_;
+    std::size_t _M_;
+    std::size_t _N_;
     Data<T> data_;
 
 };
@@ -127,32 +133,6 @@ Matrix<T>::Matrix(std::span<T> array, const std::size_t M, const std::size_t N)
 	for (auto m = 0ull; m < M; ++m)
 		for (auto n = 0ull; n < N; ++n)
 			data_[m][n] = array[n + m * N];
-}
-
-template<NumberType T>
-Matrix<T>::Matrix(const Matrix<T> &other) noexcept
-{
-	data_ = other.data_;
-}
-
-template<NumberType T>
-Matrix<T>::Matrix(Matrix<T> &&other) noexcept
-{
-	data_ = std::move(other.data_);
-}
-
-template<NumberType T>
-Matrix<T> &Matrix<T>::operator=(const Matrix<T> &other) noexcept
-{
-	data_ = other.data_;
-	return *this;
-}
-
-template<NumberType T>
-Matrix<T> &Matrix<T>::operator=(Matrix<T> &&other) noexcept
-{
-	data_ = std::move(other.data_);
-	return *this;
 }
 
 template<NumberType T>
@@ -218,7 +198,7 @@ Row<T> Matrix<T>::column(const std::size_t n) const
     if (n >= _N_)
 		throw Exception("Index out of range");
 
-    Row<T> result;
+    Row<T> result(_M_);
 
     for (auto m = 0ull; m < _M_; ++m)
 		result[m] = data_[m][n];
@@ -265,9 +245,15 @@ const Row<T> &Matrix<T>::row(const std::size_t m) const
 }
 
 template<NumberType T>
+void Matrix<T>::setData(const Data<T> &data) noexcept
+{
+    data_ = data;
+}
+
+template<NumberType T>
 Matrix<T> Matrix<T>::transposed() const noexcept
 {
-    Matrix<T> result;
+    Matrix<T> result(_M_, _N_);
 
     for (auto m = 0ull; m < _M_; ++m)
         for (auto n = 0ull; n < _N_; ++n)

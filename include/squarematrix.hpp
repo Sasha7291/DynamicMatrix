@@ -18,6 +18,11 @@ public:
     SquareMatrix(std::span<T> array, const std::size_t N) try : Matrix<T>(array, N, N) {} catch (const Exception &exception) { throw exception; }
     ~SquareMatrix() noexcept = default;
 
+    SquareMatrix(const SquareMatrix<T> &other) noexcept = default;
+    SquareMatrix(SquareMatrix<T> &&other) noexcept = default;
+    SquareMatrix &operator=(const SquareMatrix<T> &other) noexcept = default;
+    SquareMatrix &operator=(SquareMatrix<T> &&other) noexcept = default;
+
     SquareMatrix(const Matrix<T> &other);
     SquareMatrix(Matrix<T> &&other);
     SquareMatrix &operator=(const Matrix<T> &other);
@@ -35,27 +40,30 @@ public:
 template<NumberType T>
 SquareMatrix<T>::SquareMatrix(const Matrix<T> &other)
 {
-    if (other._M_ != other._N_)
+    if (other.rowCount() != other.columnCount())
         throw Exception("Other matrix is not squared");
 
+    this->_M_ = this->_N_ = other.rowCount();
     this->data_ = other.data();
 }
 
 template<NumberType T>
 SquareMatrix<T>::SquareMatrix(Matrix<T> &&other)
 {
-    if (other._M_ != other._N_)
+    if (other.rowCount() != other.columnCount())
         throw Exception("Other matrix is not squared");
 
+    this->_M_ = this->_N_ = other.rowCount();
     this->data_ = std::move(other.data());
 }
 
 template<NumberType T>
 SquareMatrix<T> &SquareMatrix<T>::operator=(const Matrix<T> &other)
 {
-    if (other._M_ != other._N_)
+    if (other.rowCount() != other.columnCount())
         throw Exception("Other matrix is not squared");
 
+    this->_M_ = this->_N_ = other.rowCount();
     this->data_ = other.data();
     return *this;
 }
@@ -63,9 +71,10 @@ SquareMatrix<T> &SquareMatrix<T>::operator=(const Matrix<T> &other)
 template<NumberType T>
 SquareMatrix<T> &SquareMatrix<T>::operator=(Matrix<T> &&other)
 {
-    if (other._M_ != other._N_)
+    if (other.rowCount() != other.columnCount())
         throw Exception("Other matrix is not squared");
 
+    this->_M_ = this->_N_ = other.rowCount();
     this->data_ = std::move(other.data());
     return *this;
 }
@@ -95,7 +104,7 @@ T SquareMatrix<T>::determinant() const
 template<NumberType T>
 void SquareMatrix<T>::inverte()
 {
-    SquareMatrix temp = this->transposed();
+    SquareMatrix temp(this->transposed());
 
     double factor = 1.0 / determinant();
     for (auto m = 0ull; m < this->_N_; ++m)
@@ -114,7 +123,9 @@ SquareMatrix<T> SquareMatrix<T>::inverted() const
 template<NumberType T>
 Matrix<T> SquareMatrix<T>::toMatrix() const
 {
-    return Matrix<T>(this->data_, this->_N_, this->_N_);
+    auto result = Matrix<T>(this->_N_, this->_N_);
+    result.setData(this->data_);
+    return result;
 }
 
 template<NumberType T>
@@ -146,7 +157,7 @@ SquareMatrix<T> SquareMatrix<T>::minor(const std::size_t m, const std::size_t n)
 template<NumberType T>
 T SquareMatrix<T>::trace() const
 {
-    T result;
+    T result = static_cast<T>(0);
 
     for (auto n = 0; n < this->_N_; ++n)
         result += this->at(n, n);
