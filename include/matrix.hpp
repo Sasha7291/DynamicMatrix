@@ -1,9 +1,16 @@
 #pragma once
 
 #include <concepts>
+#define QT
+#ifdef QT
+#include <QDebug>
+#include <QSpan>
+#include <QVector>
+#else
 #include <iostream>
 #include <span>
 #include <vector>
+#endif
 
 
 template<class T>
@@ -19,8 +26,15 @@ public:
 };
 	
 template<NumberType T> using Element = T;
+#ifdef QT
+template<NumberType T> using Row = QVector<Element<T>>;
+template<NumberType T> using Data = QVector<Row<T>>;
+template<NumberType T> using InitializerArray = QSpan<const double>;
+#else
 template<NumberType T> using Row = std::vector<Element<T>>;
 template<NumberType T> using Data = std::vector<Row<T>>;
+template<NumberType T> using InitializerArray = std::span<const double>;
+#endif
 
 template<NumberType T>
 class Matrix;
@@ -41,7 +55,7 @@ public:
     Matrix() noexcept = default;
     Matrix(const std::size_t M, const std::size_t N) noexcept;
     Matrix(const T value, const std::size_t M, const std::size_t N) noexcept;
-    Matrix(std::span<T> array, const std::size_t M, const std::size_t N);
+    Matrix(InitializerArray<T> array, const std::size_t M, const std::size_t N);
 	virtual ~Matrix() noexcept = default;
 
     Matrix(const Matrix<T> &other) noexcept = default;
@@ -123,7 +137,7 @@ Matrix<T>::Matrix(const T value, const std::size_t M, const std::size_t N) noexc
 }
 
 template<NumberType T>
-Matrix<T>::Matrix(std::span<T> array, const std::size_t M, const std::size_t N)
+Matrix<T>::Matrix(InitializerArray<T> array, const std::size_t M, const std::size_t N)
     : _M_(M)
     , _N_(N)
 {

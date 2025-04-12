@@ -15,7 +15,7 @@ class SquareMatrix : public Matrix<T>
 public:
     SquareMatrix(const std::size_t N) noexcept : Matrix<T>(N, N) {}
     SquareMatrix(const T value, const std::size_t N) noexcept : Matrix<T>(value, N, N) {}
-    SquareMatrix(std::span<T> array, const std::size_t N) try : Matrix<T>(array, N, N) {} catch (const Exception &exception) { throw exception; }
+    SquareMatrix(InitializerArray<T> array, const std::size_t N) try : Matrix<T>(array, N, N) {} catch (const Exception &exception) { throw exception; }
     ~SquareMatrix() noexcept = default;
 
     SquareMatrix(const SquareMatrix<T> &other) noexcept = default;
@@ -29,7 +29,7 @@ public:
     SquareMatrix &operator=(Matrix<T> &&other);
 
     [[nodiscard]] T determinant() const;
-    void inverte();
+    void inverse();
     [[nodiscard]] SquareMatrix inverted() const;
     [[nodiscard]] Matrix<T> toMatrix() const;
     [[nodiscard]] T trace() const;
@@ -102,7 +102,7 @@ T SquareMatrix<T>::determinant() const
 }
 
 template<NumberType T>
-void SquareMatrix<T>::inverte()
+void SquareMatrix<T>::inverse()
 {
     SquareMatrix temp(this->transposed());
 
@@ -116,7 +116,7 @@ template<NumberType T>
 SquareMatrix<T> SquareMatrix<T>::inverted() const
 {
     SquareMatrix result(*this);
-    result.inverte();
+    result.inverse();
     return result;
 }
 

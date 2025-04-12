@@ -15,7 +15,7 @@ namespace dynamic_matrix
     public:
         ComplexMatrix(const std::size_t M, const std::size_t N) noexcept : Matrix<T>(M, N) {}
         ComplexMatrix(const std::complex<T> value, const std::size_t M, const std::size_t N) noexcept : Matrix<std::complex<T>>(value, M, N) {}
-        ComplexMatrix(std::span<std::complex<T>> array, const std::size_t M, const std::size_t N)
+        ComplexMatrix(InitializerArray<std::complex<T>> array, const std::size_t M, const std::size_t N)
         try : Matrix<std::complex<T>>(array, M, N) {}
         catch (const Exception &exception) { throw exception; }
         ~ComplexMatrix() noexcept = default;
