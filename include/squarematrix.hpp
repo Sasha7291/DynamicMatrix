@@ -29,6 +29,7 @@ public:
     SquareMatrix &operator=(Matrix<T> &&other);
 
     [[nodiscard]] T determinant() const;
+    void inverse(T det);
     void inverse();
     [[nodiscard]] SquareMatrix inverted() const;
     [[nodiscard]] Matrix<T> toMatrix() const;
@@ -104,13 +105,30 @@ T SquareMatrix<T>::determinant() const
 template<NumberType T>
 void SquareMatrix<T>::inverse()
 {
+    try
+    {
+        inverse(determinant());
+    }
+    catch (const Exception &exception)
+    {
+        throw exception;
+    }
+}
+
+template<NumberType T>
+void SquareMatrix<T>::inverse(T det)
+{
+    if (det <= std::numeric_limits<T>::epsilon())
+        throw Exception("det(A) == 0, A is irreversible");
+
     SquareMatrix temp(this->transposed());
 
-    double factor = 1.0 / determinant();
+    double factor = 1.0 / det;
     for (auto m = 0ull; m < this->_N_; ++m)
         for (auto n = 0ull; n < this->_N_; ++n)
             this->operator()(m, n) = std::pow(-1, m + n) * factor * temp.minor(m, n).determinant();
 }
+
 
 template<NumberType T>
 SquareMatrix<T> SquareMatrix<T>::inverted() const
