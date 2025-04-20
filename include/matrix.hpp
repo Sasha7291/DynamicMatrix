@@ -1,7 +1,7 @@
 #pragma once
 
 #include <concepts>
-#define QT
+
 #ifdef QT
 #include <QDebug>
 #include <QSpan>
