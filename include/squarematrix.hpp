@@ -83,23 +83,52 @@ SquareMatrix<T> &SquareMatrix<T>::operator=(Matrix<T> &&other)
 template<NumberType T>
 T SquareMatrix<T>::determinant() const
 {
-    if (this->_N_ == 1ull)
-    {
-        return this->at(0, 0);
-    }
-    else if (this->_N_ == 2ull)
-    {
-        return this->at(0, 0) * this->at(1, 1) - this->at(0, 1) * this->at(1, 0);
-    }
-    else
-    {
-        T result = static_cast<T>(0);
+    auto data = this->data_;
+    double result = 1.0;
+    int swap_count = 0;
 
-        for (auto n = 0ull; n < this->_N_; ++n)
-            result += std::pow(-1, n) * this->at(0, n) * minor(0, n).determinant();
+    for (int i = 0; i < this->_N_; ++i)
+    {
+        int pivot_row = i;
+        int pivot_col = i;
+        double max_val = 0.0;
 
-        return result;
+        for (int j = i; j < this->_N_; ++j)
+            for (int k = i; k < this->_N_; ++k)
+                if (std::fabs(data[j][k]) > max_val)
+                {
+                    max_val = std::fabs(data[j][k]);
+                    pivot_row = j;
+                    pivot_col = k;
+                }
+
+        if (max_val == 0)
+            return 0;
+
+        if (pivot_row != i)
+        {
+            std::swap(data[i], data[pivot_row]);
+            swap_count++;
+        }
+
+        if (pivot_col != i)
+        {
+            for (int j = 0; j < this->_N_; ++j)
+                std::swap(data[j][i], data[j][pivot_col]);
+            swap_count++;
+        }
+
+        for (int j = i + 1; j < this->_N_; ++j)
+        {
+            double factor = data[j][i] / data[i][i];
+            for (int k = i; k < this->_N_; ++k)
+                data[j][k] -= factor * data[i][k];
+        }
+
+        result *= data[i][i];
     }
+
+    return swap_count % 2 ? -result : result;
 }
 
 template<NumberType T>
